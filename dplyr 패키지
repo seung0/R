@@ -1,0 +1,459 @@
+2020-06-24
+
+R 5강
+
+#분석 데이터 불러오기
+
+-데이터 전처리를 위해 xlsx 파일을 불러온다.
+
+>library(tidyverse)
+ library(readxl)
+
+
+-현재 지정되어 있는 경로를 확인하고 지정된 폴더 안에 있는 파일들을 리스트업 해보기
+>getwd()
+>list.file(pattern = 'xlsx')
+
+# setwd(dir = 'C:/Users/LearningSpoons04/Documents/Nano Degree/data')
+현재 지정되어 있는 경로와 파일을 불러올 경로가 일치하지 않을 때 같게 설정해준다.
+
+
+stat <- read_xlsx('2019_KBO_Win.xlsx')
+stat이라는 데이터프레임이 생성됨
+
+
+#dplyr 패키지 소개
+
+-dplyr 패키지는 데이터프레임을 변형하는데 필요한 함수를 포함하고 있다.
+ (파이프 연산자를 지원하며, tidyverse 패키지를 호출하면 dplyr 패키지도 동시에 호출된다.)
+
+-dplyr 패키지로 처리할 수 있는 주요 작업은 SQL을 대체할 수 있다.
+ >데이터프레임에서 필요한 컬럼만 선택(select)하고, 조건에 맞는 행을 걸러(filter)낸다.
+ >숫자 변수에 대해 어떤 변수(group_by)를 기준으로 집계(summarise)한 변수를 생성한다.
+ >기존 변수로부터 변형한(mutate) 다양한 파생변수를 생성한다.
+ >데이터프레임을 오름차순 또는 내림차순으로 정렬(arrange)한다.
+
+
+ex)
+iris %>%
+    select(Sepal.Length, Petal.Length, Species) %>%
+    filter(Species %in% c('setosa', 'versicolor')) %>%
+    group_by(Species) %>%
+    summarise(Count = n()) %>%
+    arrange(desc(Count))
+
+
+
+
+
+#실습 : 열 선택하기
+-컬럼명 또는 인덱스로 필요한 열을 선택
+
+stat %>%
+     select(팀명, 선수명, 경기)
+
+stat %>%
+     select(1:3)
+
+*컬럼명 또는 인덱스의 순서를 바꿔서 컬럼 순서를 변경할 수 있다.
+
+
+imsi <- stat %>% 
+        select(팀명, 선수명, 경기)
+
+stat %>% 
+   select(팀명, 선수명, 경기) -> imsi
+
+--> 파이프 연산자에서는 할당연산을 반대 방향으로 설정해도 할당 가능하다.
+
+
+
+
+
+
+
+
+#실습 : 행 선택하기
+
+-입력된 숫자에 해당하는 행을 선택 (fancy indexing)
+
+>
+stat %>% slice(1:10) 
+stat %>% slice(seq(1, 300, 3))
+
+*heal(10)보다 유용하다. 중간값도 슬라이싱 가능하기 때문에
+
+
+-입력된 컬럼명 기준으로 중복된 행을 삭제
+
+>
+stat %>% distinct(팀명)
+
+distinct() 함수에는 컬럼명만 입력할 수 있으며, 입력된 열만 반환한다.
+-->별로 쓸모없음
+
+따라서,
+
+>
+stat %>% disting(팀명, .keep_all = TRUE)
+-->팀명 외에도 다른 컬럼들도 나와서 비교 분석 가능
+
+
+
+
+
+
+
+#실습 : 조건식을 만족하는 행만 선택
+
+-조건식을 설정할 수 있다. (boolean indexing)
+
+>
+stat %>% filter(팀명 == 'SK')
+stat %>% filter(팀명 == 'SK' & 경기 >= 100)
+stat %>% filter(홈런 >= 20 & 도루 >= 20)    --> AND 개념
+stat %>% filter(홈런 >= 20 | 도루 >= 20)    --> OR 개념   
+
+**만약 stats 패키지의 filter() 함수와 충돌나는 경우에는 dplyr::filter()와 같이
+  dplyr 패키지라는 것을 명시해주면 도출 가능하다.
+
+  또는, detach('packages:stats')   --> 비추
+
+
+-filter() 함수에 between() 함수로 숫자의 범위를 지정할 수 있다.
+
+>
+stat %>% filter(between(타율, 0.330, 0.350))
+stat %>% filter(타율 >= 0.330 & 타율 <= 0.350)
+stat %>% filter(between(홈런, 20, 50))
+
+
+
+
+
+
+
+
+#실습 : 컬럼명 변경
+
+-데이터프레임의 기존 컬럼명을 새로운 컬럼명으로 변경
+
+>
+stat <- stat %>% rename(이름 = 선수명)
+*변경할 컬럼명을 앞에 기존 컬럼명을 뒤에 설정
+
+-여러 컬럼명을 동시에 변경하려면 콤마(,)로 연결
+
+>
+stat %>% rename(경기횟수 = 경기,
+                타석횟수 = 타석,
+                안타횟수 = 안타) %>%
+         select(이름, 경기횟수, 타석횟수, 안타횟수)
+
+
+
+
+
+
+
+#실습 : 행 오름차순/내림차순 정렬
+
+-특정 컬럼명을 기준으로 오름차순 정렬
+>
+stat %>% arrange(경기)
+stat %>% arrange(경기, 타석)
+
+-내림차순으로 정렬하려면 desc() 함수 사용
+>
+stat %>% arrange(desc(경기), 타석)
+--> 경기 컬럼은 내림차순, 타석 컬럼은 오름차순으로 정렬
+
+stat %>% arrange(desc(경기), desc(타석))
+-->한 개 이상의 컬럼을 내림차순 할 때는 각각 따로따로 desc() 함수 적용해야함
+
+
+
+
+#실습 : 그룹 설정 및 집계 컬럼 생성
+
+-group_by() 함수에 집계 기준 컬럼명을 지정하고 뒤따르는 summarise() 함수에 아래 함수들을 이용하여 집계 컬럼을 생성한다.
+
+* n() : group_by() 다음에 summarise() 함수 안에 쓰이면 그룹별 빈도수를 계산한다.
+* sum(), mena(), median(), var(), sd(), min(), max(), IQR() 등 R 기본함수도 사용할 수 있다.
+
+>
+stat %>% group_by(팀명) %>% summarise(선수 = n())
+stat %>% group_by(팀명) %>% summarise(팀홈런 = sum(홈런))
+stat %>% group_by(팀명) %>% summarise(최다홈런 = max(홈런))
+
+
+
+
+#실습 : 그룹 해제
+
+-group_by() 함수만 실행하고 데이터프레임을 출력하면 아무런 변화가 없다.
+>
+imsi <- stat %>% group_by(팀명)
+
+이후에 summarise() 함수를 사용하면,
+
+stat %>% summarise(선수 = n())
+-->그룹화 되지 않은 상태라서 전체 선수 명수를 구해준다.
+
+imsi %>% summarise(선수 = n())
+-->팀명으로 그룹화되어 있기 때문에 팀별 선수 명수를 구해준다.
+
+-ungroup() 함수로 그룹 지정을 해제할 수 있다.
+>
+imsi %>% ungroup() %>% summarise(선수 = n())
+-->그룹화 되지 않은 상태에서 전체 선수 명수를 구해준다.
+
+
+
+
+#실습 : 파생 컬럼 생성
+
+-기존 컬럼을 이용하여 새로운 컬럼을 추가한다.
+>
+stat %>% select(이름, 출루율, 장타율) %>%
+         mutate(OPS = 출루율 + 장타율) %>%
+stat %>% filter(타수 >= 100) %>%
+         mutate(볼삼비 = round(볼넷/삼진, digits = 3L)) %>%
+         select(이름, 볼넷, 삼진, 볼삼비) %>%
+         arrange(desc(볼삼비))
+
+stat %>% mutate(타석차이 = 타석 - 타수) %>%
+         arrange(desc(타석차이)) %>%
+         select(팀명, 이름, 타석, 타수, 타석차이, 볼넷)
+
+stat %>% select(팀명, 이름, 안타, 홈런) %>%
+         filter(안타 >= 100) %>%
+         mutate(홈런비중 = round(홈런/안타, digits = 3L)) %>%
+         arrange(desc(홈런비중))
+
+-조건에 따라 이항 분류(ifelse) : 조건을 만족하는지 여부에 따라 2가지 값으로 구분한 컬럼을 생성
+>
+stat %>% select(팀명, 이름, 타석) %>%
+         mutate(규정타석 = ifelse(타석 >= 144*3.1, '이상', '미만')) %>%
+         group_by(팀명, 규정타석)
+         summarise(구분 = n())
+
+--> 각 팀별로 이상이 몇 명, 미만이 몇 명인지 나타냄
+
+
+-조건에 따라 다항 분류(case_when) : 조건을 만족하는지 여부에 따라 3가지 이상의 값으로 구분한 컬럼을 생성
+>
+stat %>% select(이름, 홈런) %>%
+         mutate(타입 = case_when(홈런 >= 20 ~'거포',
+                                홈런 >= 10 ~'주전',
+                                홈런 >= 0 ~'똑딱이'))
+
+>
+stat %>% select(이름, 홈런) %>%
+         mutate(타입 = ifelse(홈런 >= 20, '거포',
+                                ifelse(홈런 >= 10,
+                                      '주전',
+                                      '똑딱이')))
+
+
+
+
+#실습
+
+-팀별 선수 평균 홈런 갯수를 계산한 '평균홈런' 컬럼을 생성 
+
+stat %>%
+    group_by(팀명) %>%
+    summarise(인원 = n(),
+              팀홈런 = sum(홈런)) %>%
+    mutate(평균홈런 = round(팀홈런/인원, digits = 2L)) %>%
+    arrange(desc(평균홈런))
+
+
+
+-'팀타율' 컬럼을 생성
+
+stat %>%
+     group_by(팀명) %>%
+     summarise(팀타수 = sum(타수),
+               팀안타 = sum(안타)) %>%
+     mutate(팀타율 = round(팀안타/팀안타, digits = 3L))
+     arrange(desc(팀타율))
+
+
+-팀별 '볼삼비' 컬럼을 생성
+
+stat %>%
+     group_by(팀명) %>%
+     summarise(팀볼넷 = sum(볼넷),
+               팀삼진 = sum(삼진)) %>%
+     mutate(볼삼비 = round(팀볼넷/팀삼진, digits = 3L)) %>%
+     arrange(desc(볼삼비))
+
+
+
+
+
+
+ #조인(Join)
+
+ -Inner Join
+ -Left Outer Join (가장 많이 사용)
+ -Right Outer Join
+ -Full Outer Join
+
+
+<실습을 위한 데이터프레임>
+
+employ <- data.frame(
+  이름 = c('김하나', '이하늬', '박찬우', '최진상'),
+  나이 = c(24, 35, 28, 45),
+  직급 = c('주임', '과장', '대리', '부장')
+)
+
+office <- data.frame(
+  이름 = c('김하나', '이하늬', '최진상', '강민희'),
+  내선 = c('0101', '2233', '9999', '5678'),
+  부서 = c('인사', '총무', '전략', '영업')
+)
+
+detail <- data.frame(
+  직원명 = c('김하나', '박찬우', '최진상', '강민희'),
+  나이 = c(24, 31, 45, 34),
+  혈액형 = c('A', 'B', 'O', 'AB'),
+  동아리 = c('독서', '등산','와인', '재테크')
+)
+
+
+
+install.packages('dplyr')
+library('dplyr')
+
+
+#실습 : Inner Join
+
+-두 데이터프레임을 컬럼명 기준으로 합치지만, 서로 일치하는 행만 남긴다.
+>
+inner_join(employ, office, '이름')
+
+-->이름을 기준으로 겹치는 데이터만 가지고 옴
+
+
+
+#실습 : Full Outer Join
+
+-두 데이터프레임을 컬럼명 기준으로 합치지만, 전체 행을 남긴다.
+>
+full_join(employ, office, '이름')
+
+-->서로 겹치지 않은 행은 'NA'를 할당하여 모두 반환한다.
+
+
+
+#실습 : Left Outer Join
+
+-왼쪽 데이터프레임을 모두 남기고, 컬럼명이 일치하는 내용을 오른쪽에 붙인다.
+>
+left_join(employ, office, '이름')
+
+
+
+
+#실습 : Right Outer Join
+
+-오른쪽 데이터프레임을 모두 남기고, 컬럼명이 일치하는 내용을 왼쪽에 붙인다.
+>
+right_join(employ, office, '이름')
+
+
+## 다양한 'by' 인자 설정법
+
+-2개의 데이터프레임을 병합할 때 'by'인자에 외래키(foreign key)에 해당하는 컬럼명을 지정해야 하는데, 컬럼명이 같으면 앞에서 실행했던 것처럼 할 수 있지만
+ 컬럼명이 다르면 아래와 같이 지정해주어야 한다.
+>
+left_join(employ, detail, c('이름' = '직원명'))
+
+
+-2개의 데이터프레임에서 'by'인자에 지정할 컬럼이 2개 이상이면 아래와 같이 지정해주어야 한다.
+>
+left_join(employ, detal, c('이름', '나이'))
+
+**이름만을 기준으로 잡았을 때, 동명이인이 있으면 부정확한 데이터가 된다. 
+  따라서 이름 외에도 나이나 직급 등을 함께 'by'인자에 지정해주면 정확한 데이터 분석 가능
+
+
+
+
+#프로야구 데이터셋 병합
+
+-데이터프레임 병합(join) 실습을 위해 프로야구단 정보 파일을 불러온다.
+>
+getwd()
+list.files(pattern = 'csv')
+
+
+guess_encoding(file = 'KBO Team Info(EUC-KR).csv')
+guess_encoding(file = 'KBO Team Info(UTF-8).csv')
+-->인코딩 확인(안해주면 글자 깨져서 불러옴)
+
+<mac user>
+teamInfo <- read.csv(file = 'KBO Team Info(EUC-KR).csv',
+                     fileEncoding = 'EUC-KR',
+                     stringsAsFactors = FALSE)
+
+<windows user>
+teamInfo <- read.csv(file = 'KBO Team Info(UTF-8).csv',
+                     fileEncoding = 'UTF-8',
+                     stringsAsFactors = FALSE)
+
+
+<불러온 데이터를 기존의 데이터와 병합>
+
+imsi <- left_join(x = stat, 
+                  y = teamInfo, 
+                  by = '팀명')
+
+
+--> 'NA'할당된 칸이 발견 : 팀명이 서로 다른 데이터가 있다는 것
+
+따라서, table(stat$팀명)
+      table(teamInfo$팀명)
+
+      으로 팀명이 불일치하는 것을 확인해준 후 일치하도록 바꿔준다.
+
+teamInfo$팀명[teamInfo$팀명 == 'kt'] <- 'KT'
+stat$팀명[stat$팀명 == 'Hero'] <- '키움'
+
+imsi <- left_join(x = stat, 
+                  y = teamInfo, 
+                  by = '팀명')
+
+다시 할당해주면 NA 없이 모든 데이터가 병합된 것을 확인할 수 있다.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
