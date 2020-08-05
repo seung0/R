@@ -1,0 +1,379 @@
+2020-06-18
+
+R강 4강
+
+#apply() 함수 활용범
+
+-R 기본함수 중 apply() 함수를 이용하면 2차원의 행렬 및 데이터프레임 객체에 대하여 행 또는 열 방향으로 같은 함수를 반복하여 실행할 수 있다.
+
+->apply() 함수의 'X'인자에는 행렬 또는 데이터프레임을 할당한다.
+->'MARGIN'인자에는 1(행 방향) 또는 2(열 방향)을 지정한다.
+->'FUN'인자에는 반복하여 실행할 함수를 지정한다.
+
+>apply(iris[1:4], 1, sum)   : 행마다 더한 값
+>apply(iris[1:4], 2, sum).  : 열마다 더한 값
+
+>apply(iris[, 1:4], 1, mean)
+>apply(iris[, 1:4], 2, mean)
+
+>for (i in 1:4) {
+  print(mean(iris[, i]))
+}
+
+
+*for 반복문을 사용할 수도 있지만 속도 차이가 큼
+
+
+
+#sapply() 및 lapply() 함수 활용법
+
+-리스트 자료형의 경우 sapply()와 lapply() 함수를 사용할 수 있다. (데이터프레임은 리스트 자료형의 부분 집합)
+
+-실습에 사용할 리스트 자료형을 생성하면
+lst <- list(iris$Sepal.Length, iris$Petal.Length)
+
+-리스트 객체의 각 원소에 대해 같은 함수를 반복하여 실행
+sapply(lst, mean, simplify = TRUE)  --> 각 원소의 평균을 벡터로 반환
+lapply(lst, mean)                   --> 각 원소의 평균을 리스트로 반환
+
+*가능하면 sapply() 함수를 사용하는 것이 편하다.
+
+
+
+#apply() 계열 함수의 'FUN' 인자
+
+-apply() 계열 함수의 'FUN'인자에 사용자 정의 함수를 적용할 수 있다.
+
+-예를 들어, 'iris'의 1~4번째 컬럼에 대해 길이가 5 이상인 원소의 갯수를 반환하는 함수를 지정하면 
+
+
+>sapply(iris[, 1:4], function(x) length(x[x >= 5]))
+
+
+
+
+*sapply(iris[, 1:4], range)
+ 
+ -range : 최솟값, 최댓값 동시 반환 함수
+
+
+ #tapply() 함수 활용법
+
+ -tapply() 함수는 한 벡터에 대해 범주형 벡터의 레벨별로 함수를 반복 실행한다.
+  -> x 인자에 벡터를 할당하고, 'INDEX'에는 같은 길이의 범주형 벡터를 할당해주어야 한다.
+
+  >tapply(iris$Petal.Length,
+       iris$Species,
+       mean)
+
+      --> species별 Petal.length의 평균
+
+-Species 별 평균을 반환하려면 sapply()와 tapply() 함수를 함께 사용해야 한다.
+
+>sapply(iris[, 1:4], function(x) {
+  tapply(x, iris$Species, mean)
+})
+
+
+
+#실습 : 여러 과목의 가상의 점수 생성하기
+
+-가상의 시험 점수를 생성한다.
+
+>et.seed(1234)
+
+univ <- data.frame(math = sample(50:99, 20, TRUE),
+                   eng = sample(50:99, 20, TRUE),
+                   kor = sample(50:99, 20, TRUE),
+                   com = sample(50:99, 20, TRUE))
+
+
+sapply(univ, function(x) {
+  ifelse(x <= 69, 'yes', 'no')
+
+  *univ에 있는 원소 하나하나가 function 함수를 지나오면서 69 이하면 'yes', 초과면 'no'를 반환한다.
+
+
+
+#실습 : 여러 과목의 점수를 학점으로 변환하기
+
+-취득 점수를 학점으로 환산하는 사용자 정의 함수를 생성한다.
+
+
+getGrade <- function(x) {
+  if (x >= 90) {
+    grade <- 'A'
+  } else if (x >= 80) {
+    grade <- 'B'
+  } else if (x >= 70) {
+    grade <- 'C'
+  } else {
+    grade <- 'F'
+  }
+  return(grade)
+}
+
+
+-생성한 함수를 sapply에 이용해서 univ 데이터 프레임에 있는 모든 원소의 학점을 구할 수 있다. 
+
+sapply(univ, function(x) {
+  grade <- c()
+  for (i in 1:length(x)) {
+    grade[i] <- getGrade(x[i])
+  }
+  return(grade)
+})
+
+
+sapply(univ, function(x) {
+  for (i in 1:length(x)) {
+    grade[i] <- getGrade(x[i])
+  }
+  return(grade)
+})
+**grade <- c() 를 할당해주지 않아도 결과값이 반환됨
+
+
+
+#데이터 입출력
+
+-작업경로 확인 및 변경
+
+ >데이터 입출력 전 현재 작업경로(workding directory)를 확인한다. -- getwd()
+ >외부파일을 불러오고자 할 때 미리 작업경로를 변경하는 것이 좋다.
+  (왜냐하면 불러올 파일이 현재 작업경로에 없으면 해당 파일을 불러올 때 그 파일이 포함되어 있는 폴더명을 파일명 앞에 추가해야해서 번거로움)
+>작업경로를 변경하려면 setwd() 함수를 사용 -- setwd('변경하고자 하는 폴더 위치')
+ *R studio의 오른쪽 아래의 files 탭에서 More 메뉴를 활용하면 작업경로를 쉽게 변경할 수 있다.
+
+
+-절대경로 vs 상대경로
+
+ >절대경로는 '최초 시작점으로부터 경로의 끝'까지 모두 표기한 경로
+  -Windows의 경우, 'C' 또는 'D'드라이브로 시작
+  -절대경로는 유일한 경로가 되며, 절대경로를 사용하면 언제나 같은 결과를 가져온다.
+  -길게 작성되는 경우가 많아 코딩할 때 불편함
+
+>상대경로는 현재 지정된 경로에서 상대적인 위치를 나타낸 경로
+ -상대경로는 './'가 현재 위치를 의미하며, '../'는 현재 위치의 상위 폴더를 의미한다.
+ -상대경로는 몇 글자로 아주 간단하게 변경할 수 있어 코딩할 때 편리하다.
+ -현재 위치가 항상 같지 않으므로 완전된 코드를 자동화시킬 때에는 무조건 절대경로로!!
+
+
+ #R 객체를 파일로 저장하기
+
+install.packages('writexl')
+
+
+>writexl::write_xlsx(iris, 'test.xlsx')      --> 엑셀로 저장
+>write.csv(iris, 'test.csv')                 --> csv로 저장
+>write.table(iris, 'test.txt')               --> text로 저장
+
+
+
+
+-RDS 파일 : saveRDS() 함수 이용
+>saveRDS(iris, 'test.RDS')
+
+ -R에서 생성한 하나의 객체를 외부 파일로 저장해야 할 때 
+ -RDS 파일은 R 객체의 속성을 유지하므로 R 사용자끼리는 RDS 파일로 주고 받는 것이 편리하다.
+
+
+
+
+-RDA 파일 : save() 또는 save.image() 함수를 이용
+
+>save(c('lst', 'univ'), 'test.RDA')
+  -저장하고 싶은 여러 객체를 골라서 압축해서 저장
+
+>save.image('test.RDA')
+  -Environment에 있는 모든 객체 압축해서 저장
+
+
+
+
+#외부 파일 불러오기
+
+
+install.packages('readxl')
+
+
+obj <- readxl::read_xlsx('test.xlsx')
+obj <- read.csv('test.csv')
+obj <- read.table('test.txt', header = TRUE)
+
+*Environment에 'obj'이라는 이름으로 객체가 생성된다.
+
+
+obj <- readRDS('test.RDS')
+
+*RDS 파일을 불러올 때 원하는 R객체명을 지정할 수 있다.
+
+load('test.RDA')
+**RDA 파일은 R객체명을 지정할 수 없으며 저장될 때의 객체명 그대로 Environment에 생성된다.
+  압축 파일을 푸는 형태
+
+
+##참고
+
+한글 인코딩 방식
+
+-->화면에 보이는 문자가 깨져보일 때 : 멕 유저는 CP949(EUC-KR)로, Windows유저는 UTF-8로 변경
+
+-->'csv' 및 'txt' 등 텍스트 파일을 읽어올 때 인코딩 방식이 다르면 에러가 발생한다.
+   따라서 'fileEncoding'인자에 인코딩 방식을 지정해주어야 한다.
+
+-->불러오려는 파일의 인코딩 방식을 확인하려면 readr 패키지의 guess_encoding() 함수를 실행한다.
+   >readr::guess_encoding('https://www.naver.com')
+    -->콘솔에 인코딩 방식별 신뢰도 출력(가장 신로되가 큰 인코딩 방식 선택)
+
+
+
+어떤 텍스트 파일을 불러왔는데, 
+>apt <- read.csv('https://bit.ly/apt_price_2019_csv')
+
+
+에러가 발생했다면, 인코딩 방식을 추가한다.
+>apt <- read.csv('https://bit.ly/apt_price_2019_csv', 'UTF-8')
+
+또한, 객체를 저장할 때도 인코딩 방식을 지정할 수 있다.
+>write.csv(apt, 'Apt_Price_2019.csv', 'UTF-8')
+
+
+#대용량 외부 파일 불러오기
+-대용량의 텍스트(csv, txt) 파일을 불러올 때 data.table 패키지의 fread() 함수를 사용하는 것이 효과적이다.
+
+install.packages('data.table')
+
+fread('파일명.csv', stringsAsFactors = FALSE, data.table = FALSE)
+
+-->'특정 파일을 문자형 벡터로 data frame만 가져오기'
+
+*system.time(ehuge <- read.csv('huge.csv'))
+ system.time(ehuge <- fread('huge.csv'))
+
+ 비교해보면 fread가 훨씬 빠르다.
+
+
+
+ #data.frame vs tibble vs data.table
+
+ -'tibble'과 'data.table'은 'data.frame'에 몇 가지 특징을 추가한 속성이다.
+
+ tibble : tibble(), as_tibble()
+          문자 벡터가 범주형으로 반환되지 않고, 대괄호로 인덱싱할 때 하나의 컬럼만 선택해도 tibble로 반혼
+ data.table : data.table(), fread() 
+              객체 생성 속도가 크게 개선되었고, 대괄호 안에 객체명을 반복할 필요가 없다.
+
+
+
+#프로야구 데이터로 분석해보기!
+
+1) 파일을 불러오기 전에 불러올 파일이 저장되어 있는 폴더로 작업경로를 이동한다.
+   setwd('폴더명')
+
+   list.files(pattern = '2019_KBO')   --> pattern 반드시 써줘야 함 (저 패턴의 모든 파일이 리스트업 됌)
+
+2) 'stat' 객체에 할당하여 파일을 불러온다
+   
+   stat <- readRDS('2019_KBO_Win.RDS')    --> '팀명' 컬럼이 범주형 벡터
+   또는 
+   stat <- read_xlsx('2019_KBO_Win.RDS)   --> '팀명' 컬럼이 문자형 벡터
+
+
+#불러온 데이터셋 특성 확인
+
+
+class(x = stat)        --> data.frame
+str(object = stat)     --> 객체 구조 출력
+dim(x = stat)          --> 객체의 차원 출력 (데이터 프레임은 행과 열의 갯수를 출력)    
+nrow(x = stat)         --> 행의 수
+ncol(x = stat)         --> 열릐 수
+
+print(x = stat)        --> 객체 전체 내용을 콘솔창에 출력
+head(x = stat, n = 10) --> 객체의 처음 6행만 출력 (n의 기본값 6L)
+tail(x = stat, n = 10) --> 객체의 마지막 6행만 출력 (n의 기본값 6L)
+View(x = stat)         --> 객체를 스크립트창에서 새 창으로 연다.
+
+
+rownames(stat)         --> 행이름 출력
+colnames(stat)         --> 열이름 출력
+
+rownames(x = imsi) <- NULL      -->'stat'객체의 열이름 초기화
+colnames(x = stat)[1] <- '이름'  --> 첫 번째 열이름만 변경
+
+
+summary(stat)
+
+ : 'stat' 객체의 컬럼별 요약 데이터를 확인
+
+ -->문자형 벡터는 전체 길이(length), 속성(class)를 출력
+ -->범주형 벡터는 레벨(levels)별 빈도수를 내림차순으로 정렬하여 최대 6개까지 출력
+ -->숫자형 벡터는 최솟값, 1사분위수, 중앙값, 평균, 3사분위수 및 최댓값을 반환 + NA 갯수 반환
+
+
+
+빈도수 구하기
+
+table(stat$팀명)
+-->팀별 인원수 파악
+
+prop.table(table(stat$팀명))
+-->상대도수
+
+round(prop.table(table(stat$팀명)), digits = 4L)*100
+-->상대도수를 소수점 4째 자리에서 반올림 후 100곱해서 보기 좋게 정리
+
+
+##파이프 연산자(%>%)
+
+-round(prop.table(table(stat$팀명)), digits = 4L)*100
+
+ 이런 코드는 영어 문장을 해석하는 것과 같이 명령문의 중간에서 코드 읽기를 시작해야 한다.
+ 이때 파이프 연산자를 사용하면 순차적으로 깔끔하게 정리된 코드를 볼 수 있다.
+
+
+*magrittr 또는 tidyverse 패키지를 불러와야 함
+ 
+
+install.packages('tidyverse')
+
+table(stat$팀명) %>%  prop.table() %>%  round(digits = 4L)*100
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
