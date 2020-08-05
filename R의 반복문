@@ -1,0 +1,128 @@
+2020-06-18
+
+R강 4강
+
+#apply() 함수 활용범
+
+-R 기본함수 중 apply() 함수를 이용하면 2차원의 행렬 및 데이터프레임 객체에 대하여 행 또는 열 방향으로 같은 함수를 반복하여 실행할 수 있다.
+
+->apply() 함수의 'X'인자에는 행렬 또는 데이터프레임을 할당한다.
+->'MARGIN'인자에는 1(행 방향) 또는 2(열 방향)을 지정한다.
+->'FUN'인자에는 반복하여 실행할 함수를 지정한다.
+
+>apply(iris[1:4], 1, sum)   : 행마다 더한 값
+>apply(iris[1:4], 2, sum).  : 열마다 더한 값
+
+>apply(iris[, 1:4], 1, mean)
+>apply(iris[, 1:4], 2, mean)
+
+>for (i in 1:4) {
+  print(mean(iris[, i]))
+}
+
+
+*for 반복문을 사용할 수도 있지만 속도 차이가 큼
+
+
+
+#sapply() 및 lapply() 함수 활용법
+
+-리스트 자료형의 경우 sapply()와 lapply() 함수를 사용할 수 있다. (데이터프레임은 리스트 자료형의 부분 집합)
+
+-실습에 사용할 리스트 자료형을 생성하면
+lst <- list(iris$Sepal.Length, iris$Petal.Length)
+
+-리스트 객체의 각 원소에 대해 같은 함수를 반복하여 실행
+sapply(lst, mean, simplify = TRUE)  --> 각 원소의 평균을 벡터로 반환
+lapply(lst, mean)                   --> 각 원소의 평균을 리스트로 반환
+
+*가능하면 sapply() 함수를 사용하는 것이 편하다.
+
+
+
+#apply() 계열 함수의 'FUN' 인자
+
+-apply() 계열 함수의 'FUN'인자에 사용자 정의 함수를 적용할 수 있다.
+
+-예를 들어, 'iris'의 1~4번째 컬럼에 대해 길이가 5 이상인 원소의 갯수를 반환하는 함수를 지정하면 
+
+
+>sapply(iris[, 1:4], function(x) length(x[x >= 5]))
+
+
+
+
+*sapply(iris[, 1:4], range)
+ 
+ -range : 최솟값, 최댓값 동시 반환 함수
+
+
+ #tapply() 함수 활용법
+
+ -tapply() 함수는 한 벡터에 대해 범주형 벡터의 레벨별로 함수를 반복 실행한다.
+  -> x 인자에 벡터를 할당하고, 'INDEX'에는 같은 길이의 범주형 벡터를 할당해주어야 한다.
+
+  >tapply(iris$Petal.Length,
+       iris$Species,
+       mean)
+
+      --> species별 Petal.length의 평균
+
+-Species 별 평균을 반환하려면 sapply()와 tapply() 함수를 함께 사용해야 한다.
+
+>sapply(iris[, 1:4], function(x) {
+  tapply(x, iris$Species, mean)
+})
+
+
+
+#실습 : 여러 과목의 가상의 점수 생성하기
+
+-가상의 시험 점수를 생성한다.
+
+>et.seed(1234)
+
+univ <- data.frame(math = sample(50:99, 20, TRUE),
+                   eng = sample(50:99, 20, TRUE),
+                   kor = sample(50:99, 20, TRUE),
+                   com = sample(50:99, 20, TRUE))
+
+
+sapply(univ, function(x) {
+  ifelse(x <= 69, 'yes', 'no')
+
+  *univ에 있는 원소 하나하나가 function 함수를 지나오면서 69 이하면 'yes', 초과면 'no'를 반환한다.
+
+
+
+#실습 : 여러 과목의 점수를 학점으로 변환하기
+
+-취득 점수를 학점으로 환산하는 사용자 정의 함수를 생성한다.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
