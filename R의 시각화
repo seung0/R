@@ -1,0 +1,466 @@
+2020-07-03
+
+R 8강
+
+#상자수염그림(box plot)
+
+-상자수염그림은 데이터의 분포를 한 눈에 확인할 때 유용한 시각화 도구이다.
+-상자수염그림을 통해 기초 통계량은 물론 이상치도 확인할 수 있다. 
+ ->Q1과 Q3간 차이를 사분범위(IQR)라 한다.
+ ->>Q1과 Q3에서 IQR의 1.5배를 미달/초과하는 데이터를 이상치로 간주할 수 있다.
+
+
+
+
+#실습
+
+>boxplot(stat50$OPS,
+         main = 'Boxplot of OPS')
+>abline(h = quantile(stat50$OPS),
+        col = 'red',
+        lty = 3)
+
+
+
+-상자수염그림을 그렸을 때 이상치(outlier)로 판단되는 개별 관측값을 확인하려면 boxplot.stats()함수를 실행한다.
+>boxplot.stats(stat50$OPS)
+
+$out
+[1] 1.012 1.088 0.352 0.266 0.303
+
+
+
+
+
+#실습 : 상자수염그림 아래에 테이블 추가
+
+-상자수염그림에 사용된 데이터의 사분위수 데이터프레임을 생성한다.
+>qnts <- data.frame(quantile(stat50$OPS)) %>% 
+  t()
+>colnames(qnts) <- c('Min', 'Qr1', 'Med', 'Qr3', 'Max')
+
+
+
+-Plots창의 여백을 변경한다. (특히, 하단 여백을 넓게 설정한다.)
+>par(family = 'AppleGothic', mar = c(8, 4, 4, 2))
+
+
+
+
+-상자수염그림에 사용된 데이터의 사분위수 표를 추가한다.
+>boxplot(stat50$OPS,
+        main = 'Boxplot of OPS')
+
+>library(plotrix)
+>addtable2plot(x = 0.35,
+               y = 0.03,
+               table = qnts,
+               bty = 'o',
+               cex = 1,
+               xpad = 0.2,
+               ypad = 1,
+               display.colnames = TRUE,
+               display.rownames = TRUE,
+               hlines = TRUE,
+               vlines = TRUE
+
+
+#그룹별 상자수염그림 그리기
+
+-상자수염그림은 팀별 분포를 비교할 때 매우 유용하다.
+
+>boxplot(formula = OPS ~ 팀명,
+        data = stat50,
+        main = '팀별 OPS 분포')
+
+>abline(h = median(stat50$OPS),
+       col = 'red',
+       lwd = 2)
+
+
+
+
+
+
+>boxplot(formula = OPS ~ 팀명,
+        data = stat50,
+        xaxt = 'n',
+        xlab = NULL,
+        main = '팀별 OPS 분포')
+
+*xaxt : x축의 틱 레이블을 출력하지 않도록 설정
+ xlab : x축의 레이블을 출력하지 않도록 설정
+
+>addtable2plot(x = -0.52,
+              y = -0.15,
+              table = qnts,
+              bty = 'o',
+              cex = 0.7,
+              xpad = 0.2,
+              ypad = 1,
+              display.rownames = TRUE,
+              hlines = TRUE,
+              vlines = TRUE)
+
+
+#이상치(Outlier)의 처리
+
+-상자수염그림에서 boxplot.stats()함수를 통해 이상치를 탐지할 수 있었다.
+
+*이상치의 처리와 관련해서 주의해야 할 사항
+
+->상자수염그림을 통한 이상치 탐지 방법이 절대적인 방법은 아니다.
+->실제로는 이상치 판단 기준에 대해 도메인 전문가와 상의하여 결정하는 것이 좋다.
+->이상치로 판단된 데이터(레코드)를 분석하기 전에 모두 제거해야 하는 것도 아니다.
+->이상치를 제거하는 대신 다른 값으로 대체할 수 있으며, 이 또한 도메인 전문가와 상의하여 결정하는 것이 좋다.
+
+
+#히스토그램와 상자수염그림을 함께 그리기
+
+-히스토그램과 상자수염그림을 함께 그릴 수 있는 유용한 함수
+
+>library(packHV)
+
+ hist_boxplot(stat50$OPS, freq = TRUE)
+
+
+-그래프 창 설정을 초기화하는 방법
+
+>dev.off()
+ par(family = 'AppleGothic')
+
+*Plots창 설정을 변경한 후에는 다음에 그리는 그래프에 영향을 주므로 초기화가 필요한 경우가 있다.
+
+
+
+#산점도(scatter plot) 그리기 
+
+-산점도는 2개의 컬럼을 2차원 평면 위에 점을 찍은 그래프
+ (두 변수의 관계를 보기 위해 --> 나중에 회귀분석으로 이어짐)
+
+> plot(stat50$출루율,
+      stat50$장타율,
+      pch = 19,
+      col = 'gray70',
+      main = '출루율 vs 장타율')
+
+
+-'OPS'가 0.9이상인 관측값은 빨간색 점으로 산점도에 추가
+
+> ops09 <- stat50 %>% 
+   filter(OPS >= 0.9)
+
+> points(ops09$출루율,
+        ops09$장타율,
+        pch = 19,
+        col = 'red')
+
+
+-'OPS'가 0.9 이상인 빨간색 점 왼쪽에 선수 이름을 파란색으로 추가
+>text(ops09$출루율,
+      ops09$장타율,
+      labels = ops09$이름,
+      pos = 2,
+      col = 'blue',
+      font = 2,
+      cex = 1)
+
+-출루율 및 장타율 평균을 수직선과 수평선으로 추가하면 2차원 평면을 2*2 매트릭스로 변경할 수 있다.
+
+>abline(v = mean(ops09$출루율),
+        h = mean(ops09$장타율),
+        col = 'red',
+        lty = 2)
+
+
+-두 변수 간 관계를 직선으로 표현하기 위해 산점도에 회귀선을 추가한다.
+
+>reg <- lm(formula = 장타율 ~ 출루율,
+          data = stat50)
+>abline(reg = reg,
+       col = 'darkgreen',
+       lwd = 2)
+
+*회귀선은 가로축의 x컬럼이 한 단위 증가할 때 세로축의 y컬럼이 한 단위 증가하는 크기를 기울기로 표현한 것이다.
+
+
+[참고] 산점도에 사용되는 점의 모양(pch)
+
+-plot() 함수의 'pch'인자에는 26가지 점의 모양을 지정할 수 있다.
+
+**교재의 산점도 파트 50page 참고!!
+
+
+
+#산점도 행렬 그리기
+
+-산점도가 2개 컬럼의 관례를 그림으로 파악할 때 사용되는 것이라면, 산점도 행렬은 3개 이상의 컬럼으로 산점도를 동시에 그린 것이다.
+-따라서, 한 컬럼에 대해 여러 컬럼과의 관계를 한 눈에 파악할 수 있다.
+
+>pairs(x = stat[, 5:11])
+
+*분산이 퍼지는 모양을 하고 있으면 불분명(회귀모양 만들기 어려움)
+
+
++ 산점도 행렬에 상관계수 추가하기
+ -산점도 행렬은 대각원소(컬럼명)을 기준으로 같은 산점도가 대칭하고 있다.
+  (상삼각행렬에 상관계수를 출력한다면 더욱 유용해질 것이므로 패널 함수를 생성한다.)
+  
+  >panel.cor <- function(x, y) {
+  par(usr = c(0, 1, 0, 1))
+  corr <- cor(x, y, use = 'complete.obs') %>% round(2L)
+  text(0.5, 0.5, corr, cex = 2*abs(corr))
+   }
+  
+  >pairs(stat[, 5:11],
+      upper.panel = panel.cor)
+  >pairs(stat[, 13:19],
+      lower.panel = panel.cor)
+
+*panel.cor()함수를 산점도 행렬의 상삼각행렬과 하삼각행렬에 추가할 수 있다.
+
+
+[참고]
+산점도 행렬 관련 다른 함수
+
+-corrplot패키지를 활용하면 컬러풀한 산점도 행렬을 그릴 수 있다.
+
+>library(corrplot)
+
+>corr <- cor(stat50[, 5:11])
+>corrplot(corr,
+          'ellipse')
+*타원형으로 상관계수 나타냄
+
+>corrplot.mixed(corr)
+*상삼각행렬은 원으로, 하삼각행렬은 숫자로 상관계수를 나타냄
+
+
+#'circle', 'square', 'ellipse', 'number', 'shade', 'color', 'pie' 등 다양한 형태로 나타낼 수 있다.
+
+
+
+#선그래프 그리기
+-plot() 함수의 'type'인자에 line에 'l'을 지정하면 선그래프를 그린다.
+ ('x'인자에는 오름차순으로 정렬된 벡터를 지정하면 증가하는 선그래프를 그린다.)
+ 
+ >plot(sort(stat50$OPS),
+       type = 'l',
+       ylab = 'OPS',
+       main = 'Line graph of OPS')
+
+-관심 있는 분위수를 산점도 위에 추가한다.
+
+>qnts <- quantile(stat50$OPS, probs = c(0.90, 0.75, 0.50, 0.25, 0.05))
+>for (i in 1:length(qnts)) {
+   abline(h = qnts[i],
+          col = 'red',
+          lty = 3)
+   text(x = 15, y = qnts[i], labels = str_c(names(qnts)[i], ':', qnts[i]),
+        pos = 3, cex = 0.8, font = 2)
+ }
+
+
+
+
+#막대그래프 그리기
+-팀별 평균안타 데이터로 막대그래프를 그린다.
+
+>bp <- barplot(height = teamHits$평균안타,
+               names.arg = teamHits$팀명,
+               col = 'orange',
+               ylim = c(0, max(teamHits$평균안타)*1.1),
+               main = '팀별 평균안타 비교')
+
+>text(bp, teamHits$평균안타, labels = teamHits$평균안타, pos = 3, cex = 0.8, col = 'black', font = 2)
+
+
+
+#실습 : 팀별 스탯 생성
+
+-팀별 팀타율을 계산하여 데이터프레임을 생성한다.
+
+>range(teamStat1$팀타율)
+
+>bp <- barplot(height = teamStat1$팀타율,
+               names.arg = teamStat1$팀명,
+               col = 'skyblue',
+               ylim = c(0, max(teamStat1$팀타율)*1.1),
+               main = '팀별 팀타율 비교')
+>text(bp, teamStat1$팀타율, labels = teamStat1$팀타율, pos = 3, cex = 0.8, col = 'black', font = 2)
+
+
+
+
+#실습 : 팀별 스탯 생성2
+-팀별 인당홈런을 계산하여 데이터프레임으로 생성한다.
+
+>teamStat2 <- stat %>% 
+   group_by(팀명) %>% 
+   summarise(인당홈런 = mean(홈런)) %>% 
+   mutate(인당홈런 = round(인당홈런, 2L)) %>% 
+   arrange(desc(인당홈런))
+
+>bp <- barplot(height = teamStat2$인당홈런,
+               names.arg = teamStat2$팀명,
+               col = 'yellowgreen',
+               ylim = c(0, max(teamStat2$인당홈런)*1.1),
+               main = '팀별 인당 홈런')
+>text(bp, teamStat2$인당홈런, labels = teamStat2$인당홈런, pos = 3, cex = 0.8, col = 'black', font = 2)
+
+
+
+#결측값의 처리
+
+#실습 : 결측값(NA)의 개수 확인
+
+-전체 데이터프레임에서 결측값(NA)의 갯수를 확인하려면 is.na()함수를 실행하여 TRUE 또는 FALSE를 반환한 다음, sum()함수를 실행하면 된다.
+>is.na(stat) %>% sum()
+
+-is.na()함수는 'x'인자에 할당된 객체의 원소가 NA일 때 TRUE를 반환한다.
+>is.na(stat$BABIP) %>% sum()
+*'x'인자에 벡터를 반환할 수 있다.
+
+
+-데이터프레임의 컬럼별로 NA의 갯수를 확인하기 위해 purrr패키지의 map_int()함수를 사용한다.
+>map_int(.x = stat, .f = function(x)is.na(x) %>% sum())
+*함수 실행결과를 정수로 반환
+*'stat'객체의 각 컬럼을 x로 받아 function(x)안의 표현식을 차례대로 반복 실행한다.
+
+
+#실습 : 결측값(NA)의 비중 확인
+-전체 데이터프레임에서 결측값(NA)의 비중을 확인하려면 is.na()함수를 실행하여 TRUE 또는 FALSE를 반환한 다음, mean()함수를 실행하면 된다.
+>is.na(stat) %>% mean()
+
+-데이터프레임의 컬럼별로 NA의 비중을 확인하기 위해 purrr패키지의 map_dbl()함수를 사용한다.
+>map_dbl(.x = stat, .f = function(x) is.na(x) %>% mean())
+
+
+
+#실습 : 결측값(NA)의 패턴 확인
+-데이터프레임에서 결측값이 어떤 형태로 존재하는지 패턴을 확인할 수 있다.
+>dev.off();par(family = 'AppleGothic')
+>library(mice)
+>md.pattern(stat, rotate.names = TRUE)
+
+*빨간색 셀은 결측값을 포함하는 것!
+ 왼쪽 세로축의 숫자는 오른쪽 패턴을 갖는 행의 갯수
+ 오른쪽 세로축의 숫자는 각 행별 결측값의 갯수
+ 아래 가로축의 숫자는 각 컬럼별 결측값의 갯수
+
+
+#실습 : 결측값의 비중이 5% 이상인 컬럼 삭제
+-전체 컬럼 중에서 결측값의 비중이 5% 이상인 컬럼의 위치를 확인한다. 
+>NApcnt <- map_dbl(.x = stat, .f = function(x) is.na(x) %>% mean())
+>locs <- which(NApcnt >= 0.05)
+>print(locs)
+
+-locs의 원소가 TRUE에 해당하는 컬럼만 삭제
+>stat <- stat %>% select(-locs)
+
+***무조건 5%를 기준으로 삼는 것은 아님!! 도메인 지식과 결합하여 적절한 값을 평가해야 한다.
+
+
+
+
+#결측값(NA) 처리 방법 1 : 단순 대체
+-숫자 벡터의 결측값을 평균, 중위수, 최빈값 등의 대푯값으로 단순 대체(Single Imputation)하는 방법이 있다.
+ (mean()과 median() 함수는 벡터에 NA가 포함되어 있으면 항상 NA를 반환하므로 'na.rm'인자에 TRUE를 할당해주어야 한다.)
+-대푯값 외에 다른 입력변수들로 '회귀 추정'한 값으로 대체하는 방법도 있다.
+-그런데 '단순 대체'와 같은 방법을 사용하게 되면 '편향'이 발생하기 때문에 데이터 분석 결과가 안 좋은 영향을 미칠 수 있으므로 지양하는 것이 좋다.
+
+-전체 데이터프레임에 포함되어 있는 결측값의 갯수를 확인
+>is.na(stat) %>% sum()
+
+-각 컬럼별 속성(class)을 확인하고 숫자형 벡터의 위치를 찾는다.
+>varClass <- map_chr(stat, class)
+>locs <- which(varClass %in% c('numeric', 'integer'))
+>locs
+
+*숫자로 된 데이터만 관리할 수 있음
+
+
+-숫자 벡터의 결측값을 중위수로 대체하는 사용자 정의 함수를 생성
+>imputation <- function(x) {
+  x[is.na(x)] <- median(x, na.rm = TRUE)
+  return(x)
+}
+>impute1 <- map_df(.x = stat[, locs], .f = imputation)
+>is.na(impute1) %>% sum()
+
+
+
+#결측값(NA) 처리 방법 2 : NA를 포함하는 행 삭제
+-만약 어떤 컬럼에 결측값이 아주 일부 포함되어 있다면 다른 값으로 대체하는 대신 결측값을 포함하는 행을 삭제하는 방법을 선택할 수 있다.
+ (편향이 생기는 것을 피할 수 있지만, '분석 데이터의 크기가 줄어든다'는 단점)
+-NA를 포함하는 행 삭제 방법에는 두 가지 선택 방법이 있다.
+ 1)NA를 하나라도 포함하는 모든 행을 삭제 : complete.cases()함수를 사용
+ 2)특정 컬럼을 기준으로 NA를 포함하는 행만 삭제 : is.na()함수를 사용
+*상대적으로 더 중요한 역할을 하는 컬럼이 있다면 다른 컬럼의 NA로 인해 지워지면 안되므로, 두번째 방법을 사용하는 것이 좋다. 
+
+
+
+1)NA를 하나라도 포함하는 모든 행을 삭제 : complete.cases()함수를 사용
+-complete.cases() 함수는 데이터프레임의 각 행에 대해 NA를 하나라도 포함하고 있으면 FALSE, 하나도 없으면 TRUE를 반환
+>impute2 <- stat %>% filter(complete.cases(stat))
+
+2)특정 컬럼을 기준으로 NA를 포함하는 행만 삭제 : is.na()함수를 사용
+-만약 '타율' 컬럼이 상대적으로 중요하다면 다른 컬럼에 있는 NA때문에 관측값이 삭제되어서는 안되므로 
+>impute2 <- stat %>% filter(is.na(stat$타율) == FALSE)
+
+
+
+
+
+
+
+#결측값(NA) 처리 방법 3 : 다중 대체
+-분석 데이터의 분포를 기반으로 여러 개의 새로운 데이터셋을 생성한 다음, 다중선형회귀로 대체 값을 추정하고 결과를 합친 (pooling)방식
+-다중 대체도 결측값의 비중이 낮아야 좋지만, 결측값 비중이 높은 경우에는 데이터셋의 개수를 늘리는 방식으로 보완할 수 있다고 알려져 있다.
+
+-다중 대체값 생성을 실행한다.
+>mulimp <- mice(stat, m = 5, method = 'pmm', seed = 1234)
+>summary(mulimp)
+*m = 5  --> 다중 대체 값을 생성할 크기를 지정 (기본 값 : 5)
+ method = 'pmm' --> 다중 대체 방법을 지정
+                    pmm : Predictive mean matching
+ seed = 1234 --> 임의의 값을 생성해야 하므로 초기 시드를 지정한다.
+
+
+-결측값을 갖는 컬럼별로 대체값 생성 결과를 확인할 수 있다.
+>mulimp$imp$'타율'
+>impute3 <- complete(mulimp, action =1)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
